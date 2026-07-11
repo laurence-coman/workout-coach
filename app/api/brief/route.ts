@@ -149,7 +149,11 @@ export async function GET(req: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: isMonday ? 16000 : 8000,
+    max_tokens: isMonday ? 6000 : 4000,
+    // Without this, adaptive reasoning can consume the whole token budget
+    // and return zero text on complex prompts.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    thinking: { type: "disabled" } as any,
     system,
     messages: [
       {
