@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant" | "tool"; content: string };
 type Session = { id: string; title: string | null; created_at: string };
@@ -75,14 +76,58 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, session_id: sessionId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
-      const additions: Msg[] = [];
-      for (const event of data.toolEvents ?? []) {
-        additions.push({ role: "tool", content: `✓ ${event}` });
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Request failed");
       }
-      additions.push({ role: "assistant", content: data.reply });
-      setMessages((m) => [...m, ...additions]);
+      // Start an empty assistant bubble and stream into it
+      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const append = (delta: string) =>
+        setMessages((m) => {
+          const copy = [...m];
+          const last = copy[copy.length - 1];
+          if (last?.role === "assistant") {
+            copy[copy.length - 1] = { ...last, content: last.content + delta };
+          }
+          return copy;
+        });
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let evt: { t: string; v?: string };
+          try {
+            evt = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          if (evt.t === "d" && evt.v) append(evt.v);
+          else if (evt.t === "tool" && evt.v) {
+            // tool tick, then a fresh bubble for the follow-up text
+            setMessages((m) => {
+              const copy = m.filter(
+                (x, i) => !(i === m.length - 1 && x.role === "assistant" && !x.content)
+              );
+              return [
+                ...copy,
+                { role: "tool", content: `✓ ${evt.v}` },
+                { role: "assistant", content: "" },
+              ];
+            });
+          } else if (evt.t === "err" && evt.v) append(`\n\nSomething went wrong: ${evt.v}`);
+        }
+      }
+      // drop a trailing empty bubble if the stream ended on a tool call
+      setMessages((m) =>
+        m.filter((x, i) => !(i === m.length - 1 && x.role === "assistant" && !x.content))
+      );
       // refresh titles (first message names the session)
       fetch("/api/sessions")
         .then((r) => r.json())
@@ -169,7 +214,13 @@ export default function Chat() {
                 key={i}
                 className={`msg ${m.role === "user" ? "msg-user" : "msg-assistant"}`}
               >
-                {m.content}
+                {m.role === "assistant" ? (
+                  <div className="md">
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  m.content
+                )}
                 {m.role === "assistant" && (
                   <button
                     className="copy-btn"

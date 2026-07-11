@@ -618,3 +618,43 @@ tbody tr:hover {
     display: none;
   }
 }
+
+/* Markdown inside coach messages */
+.msg-assistant {
+  white-space: normal;
+}
+
+.md p + p,
+.md ul,
+.md ol {
+  margin-top: 8px;
+}
+
+.md ul,
+.md ol {
+  padding-left: 20px;
+}
+
+.md li {
+  margin-top: 3px;
+}
+
+.md h1,
+.md h2,
+.md h3 {
+  font-size: 15px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.md code {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
+
+.md strong {
+  font-weight: 650;
+}

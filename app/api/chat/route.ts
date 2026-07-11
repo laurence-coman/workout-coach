@@ -267,49 +267,73 @@ export async function POST(req: Request) {
     .is("title", null);
 
   const system = await buildSystemPrompt();
-  const toolEvents: string[] = [];
-  let finalText = "";
 
-  // Agentic loop: keep going while Claude wants to use tools
-  for (let turn = 0; turn < 5; turn++) {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-5",
-      max_tokens: 3000,
-      system,
-      tools,
-      messages,
-    });
+  // Stream NDJSON: {t:"d",v:delta} text chunks, {t:"tool",v:label} tool events,
+  // {t:"end"} when complete. The full reply is persisted server-side at the end.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const push = (obj: unknown) =>
+        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      const savedParts: string[] = [];
+      try {
+        // Agentic loop: keep going while Claude wants to use tools
+        for (let turn = 0; turn < 5; turn++) {
+          const runner = anthropic.messages.stream({
+            model: "claude-sonnet-5",
+            max_tokens: 3000,
+            system,
+            tools,
+            messages,
+          });
+          runner.on("text", (delta) => push({ t: "d", v: delta }));
+          const response = await runner.finalMessage();
 
-    const textParts = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text);
-    if (textParts.length) finalText = textParts.join("\n");
+          const textParts = response.content
+            .filter((b): b is Anthropic.TextBlock => b.type === "text")
+            .map((b) => b.text);
+          if (textParts.length) savedParts.push(textParts.join("\n"));
 
-    if (response.stop_reason !== "tool_use") break;
+          if (response.stop_reason !== "tool_use") break;
 
-    messages.push({ role: "assistant", content: response.content });
+          messages.push({ role: "assistant", content: response.content });
 
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-    for (const block of response.content) {
-      if (block.type === "tool_use") {
-        const result = await runTool(
-          block.name,
-          block.input as Record<string, unknown>
-        );
-        toolEvents.push(TOOL_LABELS[block.name] ?? block.name);
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: block.id,
-          content: result,
-        });
+          const toolResults: Anthropic.ToolResultBlockParam[] = [];
+          for (const block of response.content) {
+            if (block.type === "tool_use") {
+              const result = await runTool(
+                block.name,
+                block.input as Record<string, unknown>
+              );
+              push({ t: "tool", v: TOOL_LABELS[block.name] ?? block.name });
+              toolResults.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: result,
+              });
+            }
+          }
+          messages.push({ role: "user", content: toolResults });
+        }
+
+        const finalText = savedParts.join("\n\n").trim();
+        if (finalText) {
+          await supabase
+            .from("messages")
+            .insert({ role: "assistant", content: finalText, session_id });
+        }
+        push({ t: "end" });
+      } catch (err) {
+        push({ t: "err", v: err instanceof Error ? err.message : String(err) });
       }
-    }
-    messages.push({ role: "user", content: toolResults });
-  }
+      controller.close();
+    },
+  });
 
-  await supabase
-    .from("messages")
-    .insert({ role: "assistant", content: finalText, session_id });
-
-  return NextResponse.json({ reply: finalText, toolEvents });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }
