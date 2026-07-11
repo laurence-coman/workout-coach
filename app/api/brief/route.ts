@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { buildSystemPrompt } from "@/lib/prompt";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 // Pulls today's Oura readiness + sleep if OURA_TOKEN is set.
