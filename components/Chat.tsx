@@ -6,6 +6,14 @@ import ReactMarkdown from "react-markdown";
 type Msg = { role: "user" | "assistant" | "tool"; content: string };
 type Session = { id: string; title: string | null; created_at: string };
 
+function toPlainText(md: string) {
+  return md
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/^#{1,4}\s*/gm, "")
+    .replace(/`/g, "");
+}
+
 function sessionLabel(s: Session) {
   return s.title || "New conversation";
 }
@@ -226,7 +234,7 @@ export default function Chat() {
                     className="copy-btn"
                     title="Copy to clipboard"
                     onClick={() => {
-                      navigator.clipboard.writeText(m.content);
+                      navigator.clipboard.writeText(toPlainText(m.content));
                       setCopied(i);
                       setTimeout(() => setCopied(null), 1500);
                     }}

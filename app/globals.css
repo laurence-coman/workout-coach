@@ -658,3 +658,26 @@ tbody tr:hover {
 .md strong {
   font-weight: 650;
 }
+
+.md > * + * {
+  margin-top: 10px;
+}
+
+.md p strong:only-child,
+.md p > strong:first-child {
+  display: inline-block;
+}
+
+.md li {
+  margin-top: 5px;
+}
+
+.md li::marker {
+  color: var(--accent-dim);
+}
+
+.md hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 0;
+}

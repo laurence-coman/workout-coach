@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
 async function ouraSummary(): Promise<string | null> {
   const token = process.env.OURA_TOKEN;
   if (!token) return null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  });
   const headers = { Authorization: `Bearer ${token}` };
   try {
     const [r, s] = await Promise.all([
@@ -54,9 +56,20 @@ export async function GET(req: Request) {
   }
 
   const supabase = getSupabase();
+
+  // Pull fresh Strava/Garmin activities before reasoning, so the brief
+  // sees yesterday's completed workouts even if Sync was never clicked.
+  const host =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "workout-coach-lac.vercel.app";
+  await fetch(`https://${host}/api/strava/sync`, {
+    method: "POST",
+    cache: "no-store",
+  }).catch(() => null);
+
   const today = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    timeZone: "America/New_York",
   });
   const title = `Morning brief · ${today}`;
 
@@ -82,9 +95,9 @@ export async function GET(req: Request) {
         role: "user",
         content: `Write my morning brief. ${oura ?? "(No Oura data available today.)"}
 
-Include, in plain text with your usual formatting rules:
+Include, with your usual formatting rules:
 1. One-line read on recovery/readiness (use the Oura data if present, otherwise recent training load).
-2. Which rotation session is up today based on my recent workouts, and why.
+2. Which rotation session is up today. Base this only on what the log confirms - state plainly which recent sessions are verified in the log, and if yesterday's planned session has no log entry, say so and ask rather than assuming it happened.
 3. The full session prescription with targets anchored to my logged numbers.
 4. A contingency option.
 Keep it tight - this is a brief, not an essay.`,
