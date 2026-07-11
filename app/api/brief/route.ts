@@ -149,7 +149,7 @@ export async function GET(req: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: 6000,
+    max_tokens: isMonday ? 16000 : 8000,
     system,
     messages: [
       {
