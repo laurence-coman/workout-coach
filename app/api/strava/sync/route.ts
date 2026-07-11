@@ -60,6 +60,49 @@ async function computeSwimMetrics(
   }
 }
 
+// Laurence's HR zones (from Garmin, LTHR 166): Z1 93-111, Z2 112-129,
+// Z3 130-148, Z4 149-166, Z5 >166. Update here if retested.
+const ZONE_UPPER = [111, 129, 148, 166, Infinity];
+
+// Computes time-in-zone from the raw heart-rate stream of an activity.
+async function computeHrZones(
+  activityId: number,
+  token: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://www.strava.com/api/v3/activities/${activityId}/streams?keys=heartrate,time&key_by_type=true`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) return null;
+    const streams = await res.json();
+    const hr: number[] | undefined = streams?.heartrate?.data;
+    const t: number[] | undefined = streams?.time?.data;
+    if (!hr || !t || hr.length < 10 || hr.length !== t.length) return null;
+
+    const zoneSec = [0, 0, 0, 0, 0];
+    let total = 0;
+    let maxHr = 0;
+    for (let i = 1; i < hr.length; i++) {
+      const dt = t[i] - t[i - 1];
+      if (dt <= 0 || dt > 60) continue; // skip pauses
+      const z = ZONE_UPPER.findIndex((u) => hr[i] <= u);
+      zoneSec[z] += dt;
+      total += dt;
+      if (hr[i] > maxHr) maxHr = hr[i];
+    }
+    if (total < 300) return null; // under 5 min of HR data isn't meaningful
+
+    const parts = zoneSec
+      .map((sec, i) => ({ z: i + 1, pct: Math.round((sec / total) * 100) }))
+      .filter((x) => x.pct >= 3)
+      .map((x) => `Z${x.z} ${x.pct}%`);
+    return `HR zones: ${parts.join(", ")} (max ${maxHr}).`;
+  } catch {
+    return null;
+  }
+}
+
 // Pulls recent Strava activities (which include Garmin workouts since the
 // user's Garmin account is linked to Strava) and imports new ones.
 // Swims get SWOLF + strokes/length computed from lap data.
@@ -97,10 +140,16 @@ export async function POST() {
   const rows = [];
   for (const a of fresh) {
     const type = mapType(a.sport_type || a.type);
-    let notes: string | null = null;
+    const noteParts: string[] = [];
     if (type === "swim") {
-      notes = await computeSwimMetrics(a.id, token);
+      const swim = await computeSwimMetrics(a.id, token);
+      if (swim) noteParts.push(swim);
     }
+    if (a.average_heartrate) {
+      const zones = await computeHrZones(a.id, token);
+      if (zones) noteParts.push(zones);
+    }
+    const notes = noteParts.length ? noteParts.join(" ") : null;
     rows.push({
       date: a.start_date_local.slice(0, 10),
       type,
