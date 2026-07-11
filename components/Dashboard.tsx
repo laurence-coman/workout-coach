@@ -24,6 +24,15 @@ type Workout = {
   source: string;
 };
 
+const TYPE_COLORS: Record<string, { bg: string; fg: string }> = {
+  run: { bg: "#e7efff", fg: "#1d4fd8" },
+  swim: { bg: "#e0f4f7", fg: "#0e7490" },
+  lift: { bg: "#e8f5ec", fg: "#15803d" },
+  ride: { bg: "#fdeede", fg: "#c2570b" },
+  hike: { bg: "#f0ebe1", fg: "#7c5e2a" },
+  other: { bg: "#ededf0", fg: "#565b66" },
+};
+
 function weekKey(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
   const day = d.getDay(); // 0 = Sun
@@ -148,13 +157,19 @@ export default function Dashboard() {
         <h2>Weekly training minutes (last 12 weeks)</h2>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={weekly}>
+            <defs>
+              <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#15803d" />
+              </linearGradient>
+            </defs>
             <CartesianGrid stroke="#e3e5e0" vertical={false} />
             <XAxis dataKey="label" stroke="#6b7280" fontSize={12} />
             <YAxis stroke="#6b7280" fontSize={12} />
             <Tooltip
               contentStyle={{ background: "#ffffff", border: "1px solid #e3e5e0", borderRadius: 8 }}
             />
-            <Bar dataKey="minutes" fill="#16a34a" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="minutes" fill="url(#barFill)" radius={[5, 5, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -177,7 +192,15 @@ export default function Dashboard() {
               <tr key={w.id}>
                 <td>{w.date}</td>
                 <td>
-                  <span className="tag">{w.type}</span>
+                  <span
+                    className="tag"
+                    style={{
+                      background: (TYPE_COLORS[w.type] ?? TYPE_COLORS.other).bg,
+                      color: (TYPE_COLORS[w.type] ?? TYPE_COLORS.other).fg,
+                    }}
+                  >
+                    {w.type}
+                  </span>
                 </td>
                 <td>{w.name ?? "—"}</td>
                 <td>{w.duration_min ? `${Math.round(w.duration_min)} min` : "—"}</td>

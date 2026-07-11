@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata, Viewport } from "next";
+import NavLinks from "@/components/NavLinks";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Workout Coach",
   description: "AI workout planning, logging, and dashboards",
+  appleWebApp: { capable: true, title: "Coach", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f7f8f6",
 };
 
 export default function RootLayout({
@@ -16,12 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <nav className="nav">
-          <span className="nav-brand">Workout Coach</span>
-          <div className="nav-links">
-            <Link href="/">Chat</Link>
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/settings">Settings</Link>
-          </div>
+          <span className="nav-brand">
+            <span className="brand-dot" />
+            Workout Coach
+          </span>
+          <NavLinks />
         </nav>
         <main className="main">{children}</main>
       </body>

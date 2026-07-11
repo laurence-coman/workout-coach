@@ -229,18 +229,22 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 export async function POST(req: Request) {
-  const { message } = await req.json();
+  const { message, session_id } = await req.json();
   if (!message || typeof message !== "string") {
     return NextResponse.json({ error: "message required" }, { status: 400 });
+  }
+  if (!session_id || typeof session_id !== "string") {
+    return NextResponse.json({ error: "session_id required" }, { status: 400 });
   }
 
   const supabase = getSupabase();
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  // Load recent chat history for context
+  // Load this conversation's history for context
   const { data: history } = await supabase
     .from("messages")
     .select("role,content")
+    .eq("session_id", session_id)
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -251,7 +255,16 @@ export async function POST(req: Request) {
     { role: "user", content: message },
   ];
 
-  await supabase.from("messages").insert({ role: "user", content: message });
+  await supabase
+    .from("messages")
+    .insert({ role: "user", content: message, session_id });
+
+  // First message of a conversation becomes its title
+  await supabase
+    .from("sessions")
+    .update({ title: message.slice(0, 64) })
+    .eq("id", session_id)
+    .is("title", null);
 
   const system = await buildSystemPrompt();
   const toolEvents: string[] = [];
@@ -294,7 +307,9 @@ export async function POST(req: Request) {
     messages.push({ role: "user", content: toolResults });
   }
 
-  await supabase.from("messages").insert({ role: "assistant", content: finalText });
+  await supabase
+    .from("messages")
+    .insert({ role: "assistant", content: finalText, session_id });
 
   return NextResponse.json({ reply: finalText, toolEvents });
 }
