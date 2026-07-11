@@ -148,13 +148,13 @@ export default function Dashboard() {
         <h2>Weekly training minutes (last 12 weeks)</h2>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={weekly}>
-            <CartesianGrid stroke="#30363d" vertical={false} />
-            <XAxis dataKey="label" stroke="#8b949e" fontSize={12} />
-            <YAxis stroke="#8b949e" fontSize={12} />
+            <CartesianGrid stroke="#e3e5e0" vertical={false} />
+            <XAxis dataKey="label" stroke="#6b7280" fontSize={12} />
+            <YAxis stroke="#6b7280" fontSize={12} />
             <Tooltip
-              contentStyle={{ background: "#161b22", border: "1px solid #30363d" }}
+              contentStyle={{ background: "#ffffff", border: "1px solid #e3e5e0", borderRadius: 8 }}
             />
-            <Bar dataKey="minutes" fill="#3fb950" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="minutes" fill="#16a34a" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
