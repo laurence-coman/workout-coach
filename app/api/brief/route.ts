@@ -43,6 +43,62 @@ async function ouraSummary(): Promise<string | null> {
   }
 }
 
+function etDate(offsetDays = 0): string {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return d.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+}
+
+function etWeekday(): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    timeZone: "America/New_York",
+  }).format(new Date());
+}
+
+type WRow = {
+  date: string;
+  type: string;
+  duration_min: number | null;
+  distance_km: number | null;
+};
+
+function bucketSummary(rows: WRow[]): string {
+  if (rows.length === 0) return "no logged sessions";
+  const byType = new Map<string, { n: number; min: number; km: number }>();
+  let totalMin = 0;
+  for (const r of rows) {
+    const b = byType.get(r.type) ?? { n: 0, min: 0, km: 0 };
+    b.n += 1;
+    b.min += r.duration_min ?? 0;
+    b.km += r.distance_km ?? 0;
+    totalMin += r.duration_min ?? 0;
+    byType.set(r.type, b);
+  }
+  const parts = [...byType.entries()].map(
+    ([t, b]) =>
+      `${t} x${b.n} (${Math.round(b.min)}min${b.km ? `, ${b.km.toFixed(1)}km` : ""})`
+  );
+  return `${rows.length} sessions, ${Math.round(totalMin)} total min: ${parts.join("; ")}`;
+}
+
+// Last 7 days vs the 7 before - hard numbers the review must reckon with.
+async function weeklyAggregates(
+  supabase: ReturnType<typeof getSupabase>
+): Promise<string> {
+  const d7 = etDate(-7);
+  const d14 = etDate(-14);
+  const { data } = await supabase
+    .from("workouts")
+    .select("date,type,duration_min,distance_km")
+    .gte("date", d14)
+    .order("date");
+  const rows: WRow[] = data ?? [];
+  const thisWeek = rows.filter((r) => r.date >= d7);
+  const priorWeek = rows.filter((r) => r.date < d7);
+  return `LAST 7 DAYS (${d7} to ${etDate()}): ${bucketSummary(thisWeek)}
+PRIOR 7 DAYS (${d14} to ${d7}): ${bucketSummary(priorWeek)}`;
+}
+
 // Daily morning brief, triggered by Vercel cron. Creates a new conversation
 // containing today's readiness + recommended session, so it's the first
 // thing waiting in the app each morning.
@@ -66,12 +122,13 @@ export async function GET(req: Request) {
     cache: "no-store",
   }).catch(() => null);
 
+  const isMonday = etWeekday() === "Mon" || new URL(req.url).searchParams.get("review") === "1";
   const today = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     timeZone: "America/New_York",
   });
-  const title = `Morning brief · ${today}`;
+  const title = isMonday ? `Weekly review · ${today}` : `Morning brief · ${today}`;
 
   // Idempotent: don't create twice in one day
   const { data: existing } = await supabase
@@ -83,7 +140,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ created: false, reason: "already exists" });
   }
 
-  const [system, oura] = await Promise.all([buildSystemPrompt(), ouraSummary()]);
+  const [system, oura, aggregates] = await Promise.all([
+    buildSystemPrompt(),
+    ouraSummary(),
+    isMonday ? weeklyAggregates(supabase) : Promise.resolve(""),
+  ]);
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
@@ -93,7 +154,20 @@ export async function GET(req: Request) {
     messages: [
       {
         role: "user",
-        content: `Write my morning brief. ${oura ?? "(No Oura data available today.)"}
+        content: isMonday
+          ? `Write my weekly review and recalibration. ${oura ?? "(No Oura data available today.)"}
+
+Hard numbers for the week (computed from the log - reckon with these, do not re-derive):
+${aggregates}
+
+Structure:
+1. Last week by the numbers - interpret the aggregates above vs the rotation's intent (3 lifts, 2 swims, 1 bike per cycle). Flag any load spike over ~25% week-over-week.
+2. What went well - tie to specific logged numbers and benchmarks. Call out PRs or firsts.
+3. What needs work - max 3 items, each specific and fixable this week. Audit zone discipline: were easy days actually easy per the HR data?
+4. Week ahead - commitments, not vibes: what progresses (exact new loads/targets), what holds, whether a deload is due, and any gate approaching (e.g. the foot test run window and December ultra timeline).
+5. Any decision I need to make this week - or say there is none.
+6. Today's session in full (completeness rules apply).`
+          : `Write my morning brief. ${oura ?? "(No Oura data available today.)"}
 
 Include, with your usual formatting rules:
 1. One-line read on recovery/readiness (use the Oura data if present, otherwise recent training load).
