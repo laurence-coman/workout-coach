@@ -8,6 +8,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,19 @@ export default function Chat() {
               className={`msg ${m.role === "user" ? "msg-user" : "msg-assistant"}`}
             >
               {m.content}
+              {m.role === "assistant" && (
+                <button
+                  className="copy-btn"
+                  title="Copy to clipboard"
+                  onClick={() => {
+                    navigator.clipboard.writeText(m.content);
+                    setCopied(i);
+                    setTimeout(() => setCopied(null), 1500);
+                  }}
+                >
+                  {copied === i ? "Copied \u2713" : "Copy"}
+                </button>
+              )}
             </div>
           )
         )}

@@ -33,6 +33,44 @@ const tools: Anthropic.Tool[] = [
     },
   },
   {
+    name: "update_workout",
+    description:
+      "Update fields on an existing logged workout. Use when the user corrects an entry (wrong date, load, distance, notes). Never create a duplicate for a correction.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Workout id from the [id:...] tag in RECENT WORKOUTS",
+        },
+        date: { type: "string", description: "YYYY-MM-DD" },
+        type: { type: "string" },
+        name: { type: "string" },
+        duration_min: { type: "number" },
+        distance_km: { type: "number" },
+        avg_hr: { type: "number" },
+        effort: { type: "number" },
+        notes: { type: "string" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "delete_workout",
+    description:
+      "Delete a logged workout entry. Only when the user explicitly asks to remove it (e.g. a duplicate). Confirm first if ambiguous.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Workout id from the [id:...] tag in RECENT WORKOUTS",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
     name: "save_coach_note",
     description:
       "Replace the saved coaching notes with an updated version. Use for durable facts learned in conversation (injuries, PRs, preferences, constraints, benchmarks). Always pass the FULL revised notes text, not just the addition.",
@@ -88,6 +126,26 @@ async function runTool(name: string, input: Record<string, unknown>) {
       .from("workouts")
       .insert({ ...input, source: "manual" });
     return error ? `Error: ${error.message}` : "Workout logged.";
+  }
+
+  if (name === "update_workout") {
+    const updates: Record<string, unknown> = {};
+    for (const key of ["date", "type", "name", "duration_min", "distance_km", "avg_hr", "effort", "notes"]) {
+      if (input[key] !== undefined) updates[key] = input[key];
+    }
+    const { error } = await supabase
+      .from("workouts")
+      .update(updates)
+      .eq("id", input.id);
+    return error ? `Error: ${error.message}` : "Workout updated.";
+  }
+
+  if (name === "delete_workout") {
+    const { error } = await supabase
+      .from("workouts")
+      .delete()
+      .eq("id", input.id);
+    return error ? `Error: ${error.message}` : "Workout deleted.";
   }
 
   if (name === "save_coach_note") {
@@ -163,6 +221,8 @@ async function runTool(name: string, input: Record<string, unknown>) {
 
 const TOOL_LABELS: Record<string, string> = {
   log_workout: "Logged workout",
+  update_workout: "Updated workout",
+  delete_workout: "Deleted workout",
   save_coach_note: "Updated memory",
   manage_goal: "Updated goals",
   manage_guardrail: "Updated guardrails",
@@ -201,7 +261,7 @@ export async function POST(req: Request) {
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-5",
-      max_tokens: 1500,
+      max_tokens: 3000,
       system,
       tools,
       messages,

@@ -29,7 +29,7 @@ function weekKey(dateStr: string) {
   const day = d.getDay(); // 0 = Sun
   const monday = new Date(d);
   monday.setDate(d.getDate() - ((day + 6) % 7));
-  return monday.toISOString().slice(5, 10); // MM-DD label
+  return monday.toISOString().slice(0, 10); // full ISO date so weeks sort correctly
 }
 
 export default function Dashboard() {
@@ -80,7 +80,10 @@ export default function Dashboard() {
       entry.km += w.distance_km ?? 0;
       map.set(key, entry);
     }
-    return [...map.values()].sort((a, b) => a.week.localeCompare(b.week)).slice(-12);
+    return [...map.values()]
+      .sort((a, b) => a.week.localeCompare(b.week))
+      .slice(-12)
+      .map((w) => ({ ...w, label: w.week.slice(5) }));
   }, [workouts]);
 
   const stats = useMemo(() => {
@@ -146,7 +149,7 @@ export default function Dashboard() {
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={weekly}>
             <CartesianGrid stroke="#30363d" vertical={false} />
-            <XAxis dataKey="week" stroke="#8b949e" fontSize={12} />
+            <XAxis dataKey="label" stroke="#8b949e" fontSize={12} />
             <YAxis stroke="#8b949e" fontSize={12} />
             <Tooltip
               contentStyle={{ background: "#161b22", border: "1px solid #30363d" }}

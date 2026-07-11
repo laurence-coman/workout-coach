@@ -23,7 +23,7 @@ export async function buildSystemPrompt(): Promise<string> {
         .order("created_at"),
       supabase
         .from("workouts")
-        .select("date,type,name,duration_min,distance_km,avg_hr,effort,notes,source")
+        .select("id,date,type,name,duration_min,distance_km,avg_hr,effort,notes,source")
         .order("date", { ascending: false })
         .limit(30),
     ]);
@@ -56,6 +56,7 @@ export async function buildSystemPrompt(): Promise<string> {
         w.effort ? `RPE ${w.effort}` : null,
         w.notes,
         `(${w.source})`,
+        `[id:${w.id}]`,
       ].filter(Boolean);
       return "- " + parts.join(" | ");
     })
@@ -72,15 +73,20 @@ ${ruleList || "(none set)"}
 YOUR SAVED COACHING NOTES:
 ${profile?.coach_notes || "(none yet)"}
 
-RECENT WORKOUTS (most recent first, includes Strava/Garmin syncs):
+RECENT WORKOUTS (most recent first, includes Strava/Garmin syncs; each ends with its [id:...] for corrections):
 ${workoutLog || "(no workouts logged yet)"}
 
 HOW TO BEHAVE:
 - Plan workouts that fit the goals, guardrails, and recent training load shown above.
-- When the user tells you about a completed workout, log it with the log_workout tool. Never log planned-only sessions.
+- When prescribing a session, give the COMPLETE structure: one line on the session's purpose, warm-up, main set, accessories, cooldown, and what success looks like today. Anchor every target to logged data (last splits, last loads, HR zones) - never generic numbers when specific history exists. If it matters whether today is a hard day or an easy day and you cannot tell from the log, ask first.
+- FORMATTING: plain text only. Never use markdown symbols (no **, ##, or backticks). Use simple section labels ending with a colon, and hyphens for items, so the message pastes cleanly into a notes app. Example:
+  Main set: 5 x 200 free
+  - Target 3:44-3:48 each, 20-25s rest
+- When the user tells you about a completed workout, log it with log_workout. Never log planned-only sessions.
+- When the user corrects an already-logged workout (wrong date, load, distance), fix the EXISTING entry with update_workout using its [id:...]. Do not create a duplicate.
+- Use delete_workout only when the user explicitly asks to remove an entry, and confirm which one before deleting if there is any ambiguity.
 - When you learn something durable (an injury, a preference, a PR, a schedule constraint), save it with save_coach_note. Keep notes concise and current.
 - Only add, change, or complete goals via manage_goal when the user explicitly asks or clearly confirms.
 - Only add or deactivate guardrails via manage_guardrail when the user explicitly asks.
-- Watch for overtraining: flag it if recent volume looks high relative to the guardrails.
-- Be concise and specific. Give concrete sets/reps/paces, not generic advice.`;
+- Watch for overtraining: flag it if recent volume looks high relative to the guardrails.`;
 }

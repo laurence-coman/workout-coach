@@ -296,3 +296,39 @@ th {
 .icon-btn:hover {
   color: #f85149;
 }
+
+.copy-btn {
+  display: block;
+  margin-top: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* Mobile: stack goal/guardrail editor rows */
+@media (max-width: 640px) {
+  .item-row {
+    flex-wrap: wrap;
+  }
+
+  .item-grow {
+    flex: 1 1 100%;
+  }
+
+  .item-input {
+    min-width: 0;
+  }
+
+  .msg {
+    max-width: 92%;
+  }
+}
