@@ -22,6 +22,7 @@ type Workout = {
   effort: number | null;
   notes: string | null;
   source: string;
+  strava_id: number | null;
 };
 
 const TYPE_COLORS: Record<string, { bg: string; fg: string }> = {
@@ -32,6 +33,33 @@ const TYPE_COLORS: Record<string, { bg: string; fg: string }> = {
   hike: { bg: "#f0ebe1", fg: "#7c5e2a" },
   other: { bg: "#ededf0", fg: "#565b66" },
 };
+
+const ZONE_BAR_COLORS = ["#94a3b8", "#22c55e", "#eab308", "#f97316", "#ef4444"];
+
+function parseZones(notes: string | null): { z: number; pct: number }[] {
+  if (!notes) return [];
+  return [...notes.matchAll(/Z(\d)\s+(\d+)%/g)].map((m) => ({
+    z: Number(m[1]),
+    pct: Number(m[2]),
+  }));
+}
+
+function runPace(w: { duration_min: number | null; distance_km: number | null }) {
+  if (!w.duration_min || !w.distance_km || w.distance_km < 0.2) return null;
+  const minPerKm = w.duration_min / w.distance_km;
+  const mm = Math.floor(minPerKm);
+  const ss = Math.round((minPerKm - mm) * 60);
+  return `${mm}:${String(ss).padStart(2, "0")} /km`;
+}
+
+function niceDate(d: string) {
+  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 function weekKey(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
@@ -45,6 +73,7 @@ export default function Dashboard() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [selected, setSelected] = useState<Workout | null>(null);
   const [syncMsg, setSyncMsg] = useState("");
 
   async function load() {
@@ -189,7 +218,7 @@ export default function Dashboard() {
           </thead>
           <tbody>
             {workouts.slice(0, 50).map((w) => (
-              <tr key={w.id}>
+              <tr key={w.id} className="row-click" onClick={() => setSelected(w)}>
                 <td>{w.date}</td>
                 <td>
                   <span
@@ -218,6 +247,115 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
+
+      {selected && (
+        <div className="modal-scrim" onClick={() => setSelected(null)}>
+          <div className="workout-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="wm-header">
+              <div>
+                <h2>{selected.name ?? "Workout"}</h2>
+                <p className="wm-date">{niceDate(selected.date)}</p>
+              </div>
+              <span
+                className="tag"
+                style={{
+                  background: (TYPE_COLORS[selected.type] ?? TYPE_COLORS.other).bg,
+                  color: (TYPE_COLORS[selected.type] ?? TYPE_COLORS.other).fg,
+                }}
+              >
+                {selected.type}
+              </span>
+            </div>
+
+            <div className="wm-chips">
+              {selected.duration_min != null && (
+                <div className="wm-chip">
+                  <span>Duration</span>
+                  {Math.round(selected.duration_min)} min
+                </div>
+              )}
+              {selected.distance_km != null && (
+                <div className="wm-chip">
+                  <span>Distance</span>
+                  {selected.distance_km} km
+                </div>
+              )}
+              {selected.type === "run" && runPace(selected) && (
+                <div className="wm-chip">
+                  <span>Pace</span>
+                  {runPace(selected)}
+                </div>
+              )}
+              {selected.avg_hr != null && (
+                <div className="wm-chip">
+                  <span>Avg HR</span>
+                  {Math.round(selected.avg_hr)}
+                </div>
+              )}
+              {selected.effort != null && (
+                <div className="wm-chip">
+                  <span>RPE</span>
+                  {selected.effort}/10
+                </div>
+              )}
+              <div className="wm-chip">
+                <span>Source</span>
+                {selected.source}
+              </div>
+            </div>
+
+            {parseZones(selected.notes).length > 0 && (
+              <div className="wm-zones">
+                <h3>Time in HR zones</h3>
+                <div className="zone-bar">
+                  {parseZones(selected.notes).map((zn) => (
+                    <div
+                      key={zn.z}
+                      className="zone-seg"
+                      style={{
+                        width: `${zn.pct}%`,
+                        background: ZONE_BAR_COLORS[zn.z - 1],
+                      }}
+                      title={`Z${zn.z} · ${zn.pct}%`}
+                    />
+                  ))}
+                </div>
+                <div className="zone-legend">
+                  {parseZones(selected.notes).map((zn) => (
+                    <span key={zn.z}>
+                      <i style={{ background: ZONE_BAR_COLORS[zn.z - 1] }} />
+                      Z{zn.z} {zn.pct}%
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selected.notes && (
+              <div className="wm-notes">
+                <h3>Details</h3>
+                <p>{selected.notes}</p>
+              </div>
+            )}
+
+            <div className="wm-footer">
+              {selected.strava_id && (
+                <a
+                  className="btn btn-secondary"
+                  href={`https://www.strava.com/activities/${selected.strava_id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on Strava ↗
+                </a>
+              )}
+              <button className="btn" onClick={() => setSelected(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
