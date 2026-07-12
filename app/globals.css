@@ -884,3 +884,14 @@ tbody tr:hover {
 .md a:hover {
   color: var(--accent);
 }
+
+@media (max-width: 760px) {
+  .fb-fab {
+    bottom: 104px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 17px;
+    opacity: 0.85;
+  }
+}
