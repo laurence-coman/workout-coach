@@ -50,4 +50,6 @@ export const SOURCES: Record<string, { name: string; desc: string; url?: string 
   },
 };
 
-export const SOURCE_TAG_RE = /\[(NSCA|SCHOENFELD|DANIELS|80\/20|CONCURRENT|KOOP|CSS|BONESTRESS|RECOVERY|JUDGMENT)\]/g;
+// Tolerant: matches [NSCA] and also [NSCA anything...] so a chatty model
+// can't break the chip rendering.
+export const SOURCE_TAG_RE = /\[(NSCA|SCHOENFELD|DANIELS|80\/20|CONCURRENT|KOOP|CSS|BONESTRESS|RECOVERY|JUDGMENT)(?:[^\]]*)\]/g;
