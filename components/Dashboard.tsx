@@ -44,12 +44,22 @@ function parseZones(notes: string | null): { z: number; pct: number }[] {
   }));
 }
 
+const KM_TO_MI = 0.621371;
+const KM_TO_YD = 1093.61;
+
+function displayDistance(w: { type: string; distance_km: number | null }) {
+  if (w.distance_km == null) return null;
+  if (w.type === "swim") return `${Math.round(w.distance_km * KM_TO_YD)} yd`;
+  const mi = w.distance_km * KM_TO_MI;
+  return `${mi.toFixed(mi >= 10 ? 1 : 2)} mi`;
+}
+
 function runPace(w: { duration_min: number | null; distance_km: number | null }) {
   if (!w.duration_min || !w.distance_km || w.distance_km < 0.2) return null;
-  const minPerKm = w.duration_min / w.distance_km;
-  const mm = Math.floor(minPerKm);
-  const ss = Math.round((minPerKm - mm) * 60);
-  return `${mm}:${String(ss).padStart(2, "0")} /km`;
+  const minPerMi = w.duration_min / (w.distance_km * KM_TO_MI);
+  const mm = Math.floor(minPerMi);
+  const ss = Math.round((minPerMi - mm) * 60);
+  return `${mm}:${String(ss).padStart(2, "0")} /mi`;
 }
 
 function niceDate(d: string) {
@@ -136,9 +146,10 @@ export default function Dashboard() {
       weekMinutes: Math.round(
         thisWeek.reduce((s, w) => s + (w.duration_min ?? 0), 0)
       ),
-      weekKm:
-        Math.round(thisWeek.reduce((s, w) => s + (w.distance_km ?? 0), 0) * 10) /
-        10,
+      weekMi:
+        Math.round(
+          thisWeek.reduce((s, w) => s + (w.distance_km ?? 0), 0) * KM_TO_MI * 10
+        ) / 10,
     };
   }, [workouts]);
 
@@ -174,7 +185,7 @@ export default function Dashboard() {
         </div>
         <div className="card">
           <h3>Distance (7 days)</h3>
-          <div className="big">{stats.weekKm} km</div>
+          <div className="big">{stats.weekMi} mi</div>
         </div>
         <div className="card">
           <h3>All-time workouts</h3>
@@ -233,7 +244,7 @@ export default function Dashboard() {
                 </td>
                 <td>{w.name ?? "—"}</td>
                 <td>{w.duration_min ? `${Math.round(w.duration_min)} min` : "—"}</td>
-                <td>{w.distance_km ? `${w.distance_km} km` : "—"}</td>
+                <td>{displayDistance(w) ?? "—"}</td>
                 <td>{w.source}</td>
               </tr>
             ))}
@@ -277,7 +288,7 @@ export default function Dashboard() {
               {selected.distance_km != null && (
                 <div className="wm-chip">
                   <span>Distance</span>
-                  {selected.distance_km} km
+                  {displayDistance(selected)}
                 </div>
               )}
               {selected.type === "run" && runPace(selected) && (

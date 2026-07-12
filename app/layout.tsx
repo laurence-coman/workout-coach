@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import NavLinks from "@/components/NavLinks";
+import FeedbackWidget from "@/components/FeedbackWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
           <NavLinks />
         </nav>
         <main className="main">{children}</main>
+        <FeedbackWidget />
       </body>
     </html>
   );

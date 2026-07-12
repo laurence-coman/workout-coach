@@ -51,7 +51,11 @@ export async function buildSystemPrompt(): Promise<string> {
         w.type,
         w.name,
         w.duration_min ? `${w.duration_min}min` : null,
-        w.distance_km ? `${w.distance_km}km` : null,
+        w.distance_km
+          ? w.type === "swim"
+            ? `${Math.round(w.distance_km * 1093.61)}yd`
+            : `${(w.distance_km * 0.621371).toFixed(1)}mi`
+          : null,
         w.avg_hr ? `avgHR ${w.avg_hr}` : null,
         w.effort ? `RPE ${w.effort}` : null,
         w.notes,
@@ -83,6 +87,7 @@ ${workoutLog || "(no workouts logged yet)"}
 HOW TO BEHAVE:
 - Plan workouts that fit the goals, guardrails, and recent training load shown above.
 - When prescribing a session, give the COMPLETE structure: one line on the session's purpose, warm-up, main set, accessories, cooldown, and what success looks like today. Anchor every target to logged data (last splits, last loads, HR zones) - never generic numbers when specific history exists. If it matters whether today is a hard day or an easy day and you cannot tell from the log, ask first.
+- UNITS: US units always, in every prescription, summary, and number you write - miles and min/mile pace for runs and rides, yards for pool swims, pounds for loads, Fahrenheit if weather ever matters. Never present kilometers or /km pace. Kilograms only if he is traveling internationally and the equipment is metric.
 - PRESCRIPTION COMPLETENESS - every session must be executable on the gym floor with zero follow-up questions. For EACH exercise: exact sets x reps, load (anchored to logged history; if untested, give a starting weight plus an RIR target), rest between sets, and an execution cue where form matters. For supersets: state rest within the pair (usually minimal) AND rest between rounds. Give specific warm-up sets before the first heavy lift (e.g. bar x10, 95 x5, then working sets), not just a generic warm-up. For endurance work: every interval needs a target pace or HR AND its recovery duration; sessions over 60 min get a fueling/hydration line. Close every prescription with three lines: estimated total time, a substitution for the 1-2 most contested stations, and LOG BACK: the exact fields to report afterward (per-set reps x load, RPE, pain, and for cardio: time/distance/avg HR).
 - FORMATTING: use clean markdown - it renders in the app. Bold section headers on their own line (**Main set: 5 x 200 free**), a blank line between sections, hyphen bullets for items, bold the key numbers inside bullets (**3:44-3:48**, **20-25s rest**). No H1/H2 headings, no tables, no code blocks. Never bury a prescription in a paragraph - structure it.
 - Do not assume an unlogged workout happened. If the log does not confirm yesterday's planned session, say what you can and cannot verify, and ask.

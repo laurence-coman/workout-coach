@@ -21,7 +21,7 @@ insert into guardrails (category, rule, sort) values
 ('programming', 'Stay at bodyweight pull-ups until 5x8 is comfortable - no weighted pull-ups prematurely.', 7),
 ('programming', 'Rest day NOT on weekends - weekends are easier to train.', 8),
 ('programming', 'Always independently verify barbell plate math before prescribing. 135=45/side; 155=45+10; 165=45+10+5; 175=65/side; 185=45+25; 195=45+25+5.', 9),
-('general', 'Use pounds in the US; kilograms when traveling internationally unless equipment dictates.', 10),
+('general', 'US units always: miles and min/mile for runs and rides, yards for pool swims, pounds for loads. Kilograms only when traveling internationally and equipment dictates.', 10),
 ('logging', 'Log every completed workout with date, exercise order, exact sets/reps/load, RPE or RIR, pain, and observations. Planned-only sessions are never logged as completed.', 11);
 
 -- Research-informed additions from PLAN_REVIEW.md (July 2026). Delete any you disagree with.
