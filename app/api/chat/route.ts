@@ -273,8 +273,15 @@ export async function POST(req: Request) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      const push = (obj: unknown) =>
-        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      // Never let a dead client connection abort generation - the reply
+      // must reach the database even if the phone backgrounded the tab.
+      const push = (obj: unknown) => {
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        } catch {
+          /* client gone; keep generating and persist at the end */
+        }
+      };
       const savedParts: string[] = [];
       try {
         // Agentic loop: keep going while Claude wants to use tools
@@ -326,7 +333,11 @@ export async function POST(req: Request) {
       } catch (err) {
         push({ t: "err", v: err instanceof Error ? err.message : String(err) });
       }
-      controller.close();
+      try {
+        controller.close();
+      } catch {
+        /* already closed by disconnect */
+      }
     },
   });
 

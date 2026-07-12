@@ -40,6 +40,24 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Coming back to a backgrounded tab: the coach may have finished while we
+  // were away - reload this conversation from the server.
+  const loadingRef = useRef(false);
+  const sessionRef = useRef<string | null>(null);
+  loadingRef.current = loading;
+  sessionRef.current = sessionId;
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !loadingRef.current && sessionRef.current) {
+        fetch(`/api/messages?session_id=${sessionRef.current}`)
+          .then((r) => r.json())
+          .then((m) => Array.isArray(m) && setMessages(m));
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   async function openSession(id: string) {
     setSessionId(id);
     setHistoryOpen(false);
@@ -140,14 +158,27 @@ export default function Chat() {
       fetch("/api/sessions")
         .then((r) => r.json())
         .then((s) => Array.isArray(s) && setSessions(s));
-    } catch (err) {
+    } catch {
+      // Stream died (likely backgrounded tab) - the server keeps generating
+      // and saves the reply. Poll the conversation until it lands.
       setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content: `Something went wrong: ${err instanceof Error ? err.message : String(err)}`,
-        },
+        ...m.filter((x, i) => !(i === m.length - 1 && x.role === "assistant" && !x.content)),
+        { role: "tool", content: "✓ Connection dropped - recovering your coach's reply…" },
       ]);
+      const sid = sessionId;
+      const recover = (attempt: number) => {
+        fetch(`/api/messages?session_id=${sid}`)
+          .then((r) => r.json())
+          .then((m) => {
+            if (Array.isArray(m) && m.length && m[m.length - 1].role === "assistant") {
+              setMessages(m);
+            } else if (attempt < 6) {
+              setTimeout(() => recover(attempt + 1), 4000);
+            }
+          })
+          .catch(() => attempt < 6 && setTimeout(() => recover(attempt + 1), 4000));
+      };
+      setTimeout(() => recover(1), 3000);
     } finally {
       setLoading(false);
     }
