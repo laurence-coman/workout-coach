@@ -42,7 +42,8 @@ export async function GET(req: Request) {
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-5",
+    // Memory rewrites are high-stakes: use the heavyweight model.
+    model: "claude-opus-4-8",
     max_tokens: 4000,
     system: `You maintain the long-term memory of a personal workout coach. Given the CURRENT NOTES and the LAST DAY OF CHAT, return the complete revised notes.
 Rules:

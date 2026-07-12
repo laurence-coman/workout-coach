@@ -148,7 +148,8 @@ export async function GET(req: Request) {
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-5",
+    // Opus for the weekly synthesis; Sonnet for the routine daily brief.
+    model: isMonday ? "claude-opus-4-8" : "claude-sonnet-5",
     max_tokens: isMonday ? 6000 : 4000,
     // Without this, adaptive reasoning can consume the whole token budget
     // and return zero text on complex prompts.
