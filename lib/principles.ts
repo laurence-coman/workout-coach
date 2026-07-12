@@ -19,6 +19,7 @@ export const PRINCIPLES = `EVIDENCE LIBRARY (named sources - cite the tag, e.g. 
 - M marathon: 80-90% HRmax. T threshold: 88-92% HRmax, "comfortably hard", 20-60 min cumulative.
 - I interval: 98-100% HRmax, work bouts <=5 min with equal easy recoveries.
 - Hard days must be genuinely hard and easy days genuinely easy - no gray-zone drifting.
+- These percentages describe intensity PURPOSE - always translate into his canonical Garmin bpm zones when prescribing.
 
 [80/20] Intensity distribution (Seiler polarized-training research):
 - ~80% of endurance sessions low intensity / ~20% moderate-high. Audit weekly with HR zone data.
