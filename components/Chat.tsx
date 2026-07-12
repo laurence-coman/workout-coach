@@ -2,16 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { SOURCES, SOURCE_TAG_RE } from "@/components/sources";
 
 type Msg = { role: "user" | "assistant" | "tool"; content: string };
 type Session = { id: string; title: string | null; created_at: string };
 
 function toPlainText(md: string) {
   return md
+    .replace(SOURCE_TAG_RE, "")
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
     .replace(/^#{1,4}\s*/gm, "")
     .replace(/`/g, "");
+}
+
+function withSourceChips(md: string) {
+  return md.replace(SOURCE_TAG_RE, (_, tag) => `[ⓘ](#src:${encodeURIComponent(tag)})`);
 }
 
 function sessionLabel(s: Session) {
@@ -34,6 +40,7 @@ export default function Chat() {
   const [booting, setBooting] = useState(true);
   const [copied, setCopied] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [sourceTag, setSourceTag] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -255,7 +262,31 @@ export default function Chat() {
               >
                 {m.role === "assistant" ? (
                   <div className="md">
-                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => {
+                          if (href?.startsWith("#src:")) {
+                            const tag = decodeURIComponent(href.slice(5));
+                            return (
+                              <button
+                                className="src-chip"
+                                title={SOURCES[tag]?.name ?? tag}
+                                onClick={() => setSourceTag(tag)}
+                              >
+                                ⓘ
+                              </button>
+                            );
+                          }
+                          return (
+                            <a href={href} target="_blank" rel="noreferrer">
+                              {children}
+                            </a>
+                          );
+                        },
+                      }}
+                    >
+                      {withSourceChips(m.content)}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   m.content
@@ -285,6 +316,29 @@ export default function Chat() {
           )}
           <div ref={bottomRef} />
         </div>
+        {sourceTag && SOURCES[sourceTag] && (
+          <div className="modal-scrim" onClick={() => setSourceTag(null)}>
+            <div className="fb-modal" onClick={(e) => e.stopPropagation()}>
+              <h2>{SOURCES[sourceTag].name}</h2>
+              <p className="src-desc">{SOURCES[sourceTag].desc}</p>
+              <div className="fb-actions">
+                {SOURCES[sourceTag].url && (
+                  <a
+                    className="btn btn-secondary"
+                    href={SOURCES[sourceTag].url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Learn more ↗
+                  </a>
+                )}
+                <button className="btn" onClick={() => setSourceTag(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="chat-input-row">
           <textarea
             rows={2}
