@@ -237,6 +237,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "session_id required" }, { status: 400 });
   }
 
+  // "deep:" prefix routes this turn to the heavyweight model with a
+  // larger reasoning budget - for planning questions that deserve it.
+  const deep = /^deep:/i.test(message.trim());
+  const userMessage = deep ? message.trim().replace(/^deep:\s*/i, "") : message;
+
   const supabase = getSupabase();
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -252,17 +257,17 @@ export async function POST(req: Request) {
     ...(history ?? [])
       .reverse()
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-    { role: "user", content: message },
+    { role: "user", content: userMessage },
   ];
 
   await supabase
     .from("messages")
-    .insert({ role: "user", content: message, session_id });
+    .insert({ role: "user", content: userMessage, session_id });
 
   // First message of a conversation becomes its title
   await supabase
     .from("sessions")
-    .update({ title: message.slice(0, 64) })
+    .update({ title: userMessage.slice(0, 64) })
     .eq("id", session_id)
     .is("title", null);
 
@@ -287,13 +292,13 @@ export async function POST(req: Request) {
         // Agentic loop: keep going while Claude wants to use tools
         for (let turn = 0; turn < 5; turn++) {
           const runner = anthropic.messages.stream({
-            model: "claude-sonnet-5",
-            // Bounded thinking: reasoning capped at 2k so the visible reply
-            // always has guaranteed room. Unbounded adaptive thinking once
-            // consumed the whole budget and returned zero text.
-            max_tokens: 8000,
+            model: deep ? "claude-opus-4-8" : "claude-sonnet-5",
+            // Bounded thinking: reasoning capped so the visible reply always
+            // has guaranteed room. Unbounded adaptive thinking once consumed
+            // the whole budget and returned zero text.
+            max_tokens: deep ? 16000 : 8000,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            thinking: { type: "enabled", budget_tokens: 2000 } as any,
+            thinking: { type: "enabled", budget_tokens: deep ? 6000 : 2000 } as any,
             system,
             tools,
             messages,
