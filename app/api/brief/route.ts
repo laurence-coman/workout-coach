@@ -148,12 +148,11 @@ export async function GET(req: Request) {
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
-    // Opus for the weekly synthesis; Sonnet for the routine daily brief.
-    model: isMonday ? "claude-opus-4-8" : "claude-sonnet-5",
+    model: "claude-opus-4-8",
     max_tokens: isMonday ? 12000 : 8000,
     // Bounded thinking: capped reasoning, guaranteed output room.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    thinking: { type: "enabled", budget_tokens: isMonday ? 4000 : 2000 } as any,
+    thinking: { type: "enabled", budget_tokens: isMonday ? 4000 : 3000 } as any,
     system,
     messages: [
       {

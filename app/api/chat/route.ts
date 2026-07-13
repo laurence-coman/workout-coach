@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { buildSystemPrompt } from "@/lib/prompt";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const tools: Anthropic.Tool[] = [
   {
@@ -292,13 +292,12 @@ export async function POST(req: Request) {
         // Agentic loop: keep going while Claude wants to use tools
         for (let turn = 0; turn < 5; turn++) {
           const runner = anthropic.messages.stream({
-            model: deep ? "claude-opus-4-8" : "claude-sonnet-5",
-            // Bounded thinking: reasoning capped so the visible reply always
-            // has guaranteed room. Unbounded adaptive thinking once consumed
-            // the whole budget and returned zero text.
-            max_tokens: deep ? 16000 : 8000,
+            // Opus with bounded thinking on every reply; "deep:" raises the
+            // reasoning budget further for big planning questions.
+            model: "claude-opus-4-8",
+            max_tokens: deep ? 20000 : 12000,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            thinking: { type: "enabled", budget_tokens: deep ? 6000 : 2000 } as any,
+            thinking: { type: "enabled", budget_tokens: deep ? 8000 : 4000 } as any,
             system,
             tools,
             messages,
