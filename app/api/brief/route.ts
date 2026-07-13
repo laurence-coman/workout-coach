@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { buildSystemPrompt } from "@/lib/prompt";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 // Pulls today's Oura readiness + sleep if OURA_TOKEN is set.
@@ -150,11 +150,10 @@ export async function GET(req: Request) {
   const response = await anthropic.messages.create({
     // Opus for the weekly synthesis; Sonnet for the routine daily brief.
     model: isMonday ? "claude-opus-4-8" : "claude-sonnet-5",
-    max_tokens: isMonday ? 6000 : 4000,
-    // Without this, adaptive reasoning can consume the whole token budget
-    // and return zero text on complex prompts.
+    max_tokens: isMonday ? 12000 : 8000,
+    // Bounded thinking: capped reasoning, guaranteed output room.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    thinking: { type: "disabled" } as any,
+    thinking: { type: "enabled", budget_tokens: isMonday ? 4000 : 2000 } as any,
     system,
     messages: [
       {

@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 // Nightly memory consolidation, triggered by Vercel cron (see vercel.json).
@@ -44,7 +44,9 @@ export async function GET(req: Request) {
   const response = await anthropic.messages.create({
     // Memory rewrites are high-stakes: use the heavyweight model.
     model: "claude-opus-4-8",
-    max_tokens: 4000,
+    max_tokens: 10000,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    thinking: { type: "enabled", budget_tokens: 3000 } as any,
     system: `You maintain the long-term memory of a personal workout coach. Given the CURRENT NOTES and the LAST DAY OF CHAT, return the complete revised notes.
 Rules:
 - Preserve all existing sections and facts unless the chat explicitly corrected them.

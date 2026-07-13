@@ -288,11 +288,12 @@ export async function POST(req: Request) {
         for (let turn = 0; turn < 5; turn++) {
           const runner = anthropic.messages.stream({
             model: "claude-sonnet-5",
-            max_tokens: 4000,
-            // Without this, adaptive reasoning can consume the whole budget
-            // and return zero text (dots appear, then nothing).
+            // Bounded thinking: reasoning capped at 2k so the visible reply
+            // always has guaranteed room. Unbounded adaptive thinking once
+            // consumed the whole budget and returned zero text.
+            max_tokens: 8000,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            thinking: { type: "disabled" } as any,
+            thinking: { type: "enabled", budget_tokens: 2000 } as any,
             system,
             tools,
             messages,
