@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { buildSystemPrompt } from "@/lib/prompt";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const tools: Anthropic.Tool[] = [
   {
@@ -288,7 +288,11 @@ export async function POST(req: Request) {
         for (let turn = 0; turn < 5; turn++) {
           const runner = anthropic.messages.stream({
             model: "claude-sonnet-5",
-            max_tokens: 3000,
+            max_tokens: 4000,
+            // Without this, adaptive reasoning can consume the whole budget
+            // and return zero text (dots appear, then nothing).
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            thinking: { type: "disabled" } as any,
             system,
             tools,
             messages,

@@ -157,10 +157,22 @@ export default function Chat() {
           } else if (evt.t === "err" && evt.v) append(`\n\nSomething went wrong: ${evt.v}`);
         }
       }
-      // drop a trailing empty bubble if the stream ended on a tool call
-      setMessages((m) =>
-        m.filter((x, i) => !(i === m.length - 1 && x.role === "assistant" && !x.content))
-      );
+      // Stream finished: if nothing arrived, say so instead of vanishing.
+      setMessages((m) => {
+        const last = m[m.length - 1];
+        if (last?.role === "assistant" && !last.content) {
+          const anyContent = m.some((x) => x.role === "assistant" && x.content);
+          const copy = m.slice(0, -1);
+          if (!anyContent || m.filter((x) => x.role === "assistant").length === 1) {
+            copy.push({
+              role: "assistant",
+              content: "No reply came through - that one's on me, not you. Send it again.",
+            });
+          }
+          return copy;
+        }
+        return m;
+      });
       // refresh titles (first message names the session)
       fetch("/api/sessions")
         .then((r) => r.json())
