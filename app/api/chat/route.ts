@@ -296,8 +296,9 @@ export async function POST(req: Request) {
             // reasoning budget further for big planning questions.
             model: "claude-opus-4-8",
             max_tokens: deep ? 20000 : 12000,
+            // SDK types lag the API: spread the new thinking controls past TS.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            thinking: { type: "enabled", budget_tokens: deep ? 8000 : 4000 } as any,
+            ...({ thinking: { type: "adaptive" }, output_config: { effort: deep ? "high" : "medium" } } as any),
             system,
             tools,
             messages,

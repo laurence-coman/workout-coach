@@ -44,9 +44,9 @@ export async function GET(req: Request) {
   const response = await anthropic.messages.create({
     // Memory rewrites are high-stakes: use the heavyweight model.
     model: "claude-opus-4-8",
-    max_tokens: 10000,
+    max_tokens: 12000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    thinking: { type: "enabled", budget_tokens: 3000 } as any,
+    ...({ thinking: { type: "adaptive" }, output_config: { effort: "high" } } as any),
     system: `You maintain the long-term memory of a personal workout coach. Given the CURRENT NOTES and the LAST DAY OF CHAT, return the complete revised notes.
 Rules:
 - Preserve all existing sections and facts unless the chat explicitly corrected them.

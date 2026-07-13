@@ -149,10 +149,9 @@ export async function GET(req: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
     model: "claude-opus-4-8",
-    max_tokens: isMonday ? 12000 : 8000,
-    // Bounded thinking: capped reasoning, guaranteed output room.
+    max_tokens: isMonday ? 16000 : 10000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    thinking: { type: "enabled", budget_tokens: isMonday ? 4000 : 3000 } as any,
+    ...({ thinking: { type: "adaptive" }, output_config: { effort: isMonday ? "high" : "medium" } } as any),
     system,
     messages: [
       {
