@@ -167,8 +167,9 @@ Structure:
 2. What went well - tie to specific logged numbers and benchmarks. Call out PRs or firsts.
 3. What needs work - max 3 items, each specific and fixable this week. Audit zone discipline: were easy days actually easy per the HR data?
 4. Week ahead - commitments, not vibes: what progresses (exact new loads/targets), what holds, whether a deload is due, and any gate approaching (e.g. the foot test run window and December ultra timeline).
-5. Any decision I need to make this week - or say there is none.
-6. Today's session in full (completeness rules apply).`
+5. Template audit: is the current rotation still right? Check pattern coverage and weekly sets per muscle against targets, name any progression stalls, and propose template changes if warranted - every 4-6 weeks a deliberate mesocycle change is expected, not optional.
+6. Any decision I need to make this week - or say there is none.
+7. Today's session in full (completeness rules apply).`
           : `Write my morning brief. ${oura ?? "(No Oura data available today.)"}
 
 Include, with your usual formatting rules:
