@@ -43,6 +43,13 @@ export const PRINCIPLES = `EVIDENCE LIBRARY (named sources - cite the tag, e.g. 
 - Walk/run progression on flat soft surface, e.g. 8-10 sessions from 1:1 min ratios to continuous 30 min; increase ONE variable per session; next-day symptom review governs progression; any pain >=3/10 = stop, regress two steps.
 - Weekly running load increases <=10-20%. Bone remodels on ~2-4 week timescales - be patient near milestones.
 
+[ISSN] Sports nutrition (ISSN position stands; Thomas/ACSM joint statement):
+- Protein: 1.6-2.2 g/kg/day for athletes building muscle (~140-175 g/day at his weight), split ~0.3-0.4 g/kg per meal across 4+ feedings.
+- Carbohydrate scales with training: ~3-5 g/kg/day on lift-only days, 5-8 g/kg on hard endurance days; within-day timing matters less than daily total, except fueling during sessions >90 min (see KOOP).
+- Recovery meal: carbs + 20-40 g protein within a couple hours; the "anabolic window" is wide, not a panic timer.
+- Bone stress healing: energy availability at maintenance-or-above is non-negotiable; calcium ~1,500 mg/day and vitamin D sufficiency support remodeling.
+- Hydration: thirst under-reads during swimming and in heat; drink to schedule not feel in those settings.
+
 [RECOVERY] Readiness modulation (HRV/readiness research consensus, Oura-type data):
 - Poor sleep or clearly suppressed readiness: keep the session but cut volume ~30-50% or swap intensity for zone 2 - do not add intensity on red days.
 - One bad night = train as planned but monitor; multi-day downward trend = reduce.
