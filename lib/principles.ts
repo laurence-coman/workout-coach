@@ -43,6 +43,20 @@ export const PRINCIPLES = `EVIDENCE LIBRARY (named sources - cite the tag, e.g. 
 - Walk/run progression on flat soft surface, e.g. 8-10 sessions from 1:1 min ratios to continuous 30 min; increase ONE variable per session; next-day symptom review governs progression; any pain >=3/10 = stop, regress two steps.
 - Weekly running load increases <=10-20%. Bone remodels on ~2-4 week timescales - be patient near milestones.
 
+[COVERAGE] Complete-coverage taxonomy (regional hypertrophy + long-muscle-length training evidence; Schoenfeld/Wolf lengthened-position work):
+Movement patterns that must all appear across a training week: horizontal push, vertical/incline push, horizontal pull, vertical pull, hip hinge, knee-dominant squat/lunge, plus core (anti-extension AND anti-rotation/oblique). A missing pattern is a programming gap even if total volume looks fine.
+Within-muscle coverage - muscles are not one thing; for any muscle tied to a goal, cover its regions/functions:
+- Delts: front (fed by pressing - rarely needs direct work), lateral (needs direct abduction - raises), rear (needs direct work - face pulls, reverse flys). Pressing alone leaves 2 of 3 heads underfed.
+- Triceps: long head only fully loads with the arm overhead (overhead extensions, incline variations); lateral/medial via pushdowns and pressing. Rotate emphasis across sessions, don't stack both in one.
+- Hamstrings: two jobs - hip extension (RDL/hinge) AND knee flexion (leg curl variations, sliders, Nordic regressions). A hinge-only program trains half the muscle's function.
+- Quads: need dedicated knee-dominant loading; hinges don't count.
+- Chest: flat and incline bias different regions; both should appear over a rotation.
+- Back: vertical pull + horizontal row + scap/rear-delt health work.
+- Calves: gastrocnemius (straight-knee) and soleus (bent-knee) both, especially for runners.
+- Biceps: supinated curl + neutral/hammer grip cover the elbow flexors.
+Training at long muscle lengths (deep stretch position) produces equal or better hypertrophy than short-length work - bias exercise choices toward full ROM and loaded stretch.
+AUDIT DUTY: the weekly review must walk this checklist against the current rotation and name every gap proactively - never wait for the athlete to ask "why aren't we doing X".
+
 [ISSN] Sports nutrition (ISSN position stands; Thomas/ACSM joint statement):
 - Protein: 1.6-2.2 g/kg/day for athletes building muscle (~140-175 g/day at his weight), split ~0.3-0.4 g/kg per meal across 4+ feedings.
 - Carbohydrate scales with training: ~3-5 g/kg/day on lift-only days, 5-8 g/kg on hard endurance days; within-day timing matters less than daily total, except fueling during sessions >90 min (see KOOP).

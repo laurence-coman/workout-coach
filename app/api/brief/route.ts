@@ -181,7 +181,7 @@ Structure:
 2. What went well - tie to specific logged numbers and benchmarks. Call out PRs or firsts.
 3. What needs work - max 3 items, each specific and fixable this week. Audit zone discipline with the HR data.
 4. Week ahead - commitments: what progresses (exact new loads/targets), what holds, deload check, gates approaching.
-5. Template audit: is the rotation still right? Pattern coverage and weekly sets per muscle vs targets, progression stalls, propose changes - a deliberate mesocycle change every 4-6 weeks is expected.
+5. Template audit: walk the [COVERAGE] checklist line by line against the current rotation - every movement pattern and every within-muscle region for goal-linked muscles - and name each gap found. Then weekly sets per muscle vs targets, progression stalls, and proposed changes; a deliberate mesocycle change every 4-6 weeks is expected.
 6. Any decision I need to make this week - or none.
 7. Tomorrow's session in full (completeness rules apply).`
       : `It is ${etWeekday(0)} evening. Write tomorrow's session plan (${etWeekday(1)} ${etDate(1)}). ${ouraLine}
