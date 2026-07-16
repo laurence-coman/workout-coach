@@ -8,6 +8,7 @@ type Goal = {
   target: string | null;
   deadline: string | null;
   status: string;
+  sort: number | null;
 };
 
 type Guardrail = {
@@ -65,6 +66,23 @@ export default function SettingsForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, ...updates }),
     });
+  }
+
+  async function moveGoal(idx: number, dir: -1 | 1) {
+    const j = idx + dir;
+    if (j < 0 || j >= goals.length) return;
+    const arr = [...goals];
+    [arr[idx], arr[j]] = [arr[j], arr[idx]];
+    setGoals(arr);
+    await Promise.all(
+      arr.map((g, i) =>
+        fetch("/api/goals", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: g.id, sort: i + 1 }),
+        })
+      )
+    );
   }
 
   async function deleteGoal(id: string) {
@@ -127,11 +145,16 @@ export default function SettingsForm() {
       <section className="settings-section">
         <h2>Performance goals</h2>
         <p className="hint">
-          The coach reads these on every message. Click any field to edit.
-          Changes save automatically.
+          Ranked by priority - #1 wins when goals conflict. Reorder with the
+          arrows; click any field to edit. Changes save automatically.
         </p>
-        {goals.map((g) => (
+        {goals.map((g, gi) => (
           <div key={g.id} className={`item-row ${g.status !== "active" ? "item-dim" : ""}`}>
+            <span className="rank-num">{gi + 1}</span>
+            <span className="rank-btns">
+              <button className="icon-btn" title="Higher priority" onClick={() => moveGoal(gi, -1)}>▲</button>
+              <button className="icon-btn" title="Lower priority" onClick={() => moveGoal(gi, 1)}>▼</button>
+            </span>
             <input
               className="item-input item-grow"
               value={g.title}
