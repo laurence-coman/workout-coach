@@ -24,7 +24,7 @@ export default function RootLayout({
         <nav className="nav">
           <span className="nav-brand">
             <span className="brand-dot" />
-            Workout Coach
+            <span className="brand-text">Workout Coach</span>
           </span>
           <NavLinks />
         </nav>

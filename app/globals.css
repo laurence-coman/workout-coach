@@ -566,6 +566,23 @@ tbody tr:hover {
     padding: 16px 12px;
   }
 
+  .nav {
+    padding: 11px 12px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .nav-links {
+    gap: 2px;
+  }
+
+  .nav-link {
+    font-size: 13.5px;
+    padding: 6px 9px;
+  }
+
   .chat-layout {
     height: calc(100dvh - 100px);
   }
