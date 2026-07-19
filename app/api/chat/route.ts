@@ -83,6 +83,39 @@ const tools: Anthropic.Tool[] = [
     },
   },
   {
+    name: "publish_plan",
+    description:
+      "Publish the finalized session plan to the Workout tab for gym-floor execution. Use when the user locks in a plan ('lock it in', 'publish', 'good to go'). Replaces any currently active plan.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "e.g. 'Lower Strength B'" },
+        date: { type: "string", description: "YYYY-MM-DD the session is for" },
+        type: { type: "string", description: "lift | run | swim | ride | other" },
+        purpose: { type: "string", description: "One-line session purpose" },
+        est_minutes: { type: "number" },
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              prescription: {
+                type: "string",
+                description:
+                  "Complete line: sets x reps @ load, rest, RIR - executable without follow-ups",
+              },
+              cues: { type: "string" },
+              tag: { type: "string", description: "Evidence tag, e.g. NSCA" },
+            },
+            required: ["name", "prescription"],
+          },
+        },
+      },
+      required: ["title", "date", "items"],
+    },
+  },
+  {
     name: "manage_goal",
     description:
       "Add, update, or change the status of a training goal. Only use when the user explicitly asks or clearly confirms a goal change.",
@@ -159,6 +192,19 @@ async function runTool(name: string, input: Record<string, unknown>) {
     return error ? `Error: ${error.message}` : "Notes saved.";
   }
 
+  if (name === "publish_plan") {
+    await supabase.from("plans").update({ status: "replaced" }).eq("status", "active");
+    const { error } = await supabase.from("plans").insert({
+      title: input.title,
+      date: input.date,
+      type: input.type ?? "lift",
+      purpose: input.purpose ?? null,
+      est_minutes: input.est_minutes ?? null,
+      items: input.items,
+    });
+    return error ? `Error: ${error.message}` : "Plan published to the Workout tab.";
+  }
+
   if (name === "manage_goal") {
     const action = input.action as string;
     if (action === "add") {
@@ -221,6 +267,7 @@ async function runTool(name: string, input: Record<string, unknown>) {
 
 const TOOL_LABELS: Record<string, string> = {
   log_workout: "Logged workout",
+  publish_plan: "Published to Workout tab",
   update_workout: "Updated workout",
   delete_workout: "Deleted workout",
   save_coach_note: "Updated memory",

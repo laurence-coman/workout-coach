@@ -968,3 +968,249 @@ tbody tr:hover {
 .rank-btns .icon-btn:hover {
   color: var(--accent-dim);
 }
+
+/* Labeled source chips */
+.src-chip {
+  width: auto;
+  height: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Session sidebar actions */
+.session-item {
+  cursor: pointer;
+}
+
+.session-actions {
+  display: none;
+  flex-shrink: 0;
+  gap: 0;
+}
+
+.session-item:hover .session-actions {
+  display: inline-flex;
+}
+
+.session-item:hover .session-date {
+  display: none;
+}
+
+.session-actions .icon-btn {
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.session-edit {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Workout tab */
+.wt {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 24px;
+}
+
+.wt-empty {
+  margin: 18vh auto 0;
+  text-align: center;
+}
+
+.wt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.wt-header h1 {
+  font-size: 23px;
+}
+
+.wt-meta {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+
+.wt-purpose {
+  font-size: 14px;
+  margin-top: 8px;
+  color: var(--text);
+}
+
+.wt-progress {
+  flex-shrink: 0;
+  background: var(--accent-soft);
+  color: var(--accent-dim);
+  font-weight: 750;
+  font-size: 15px;
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+
+.wt-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.wt-card.done {
+  opacity: 0.55;
+  border-color: var(--accent);
+}
+
+.wt-card-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.wt-num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-dim);
+  font-size: 13px;
+  font-weight: 750;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.wt-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.wt-card-title h2 {
+  font-size: 16.5px;
+  letter-spacing: -0.01em;
+}
+
+.wt-rx {
+  font-size: 14px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+
+.wt-cues {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.wt-log-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.wt-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.wt-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.wt-check {
+  width: 42px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 17px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wt-check.on {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #fff;
+}
+
+.wt-finish {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 18px;
+  box-shadow: var(--shadow);
+}
+
+.wt-scale {
+  margin-bottom: 14px;
+}
+
+.wt-scale-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.wt-scale-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wt-chip {
+  min-width: 36px;
+  padding: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wt-chip.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.wt-chip.pain.on {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.wt-complete {
+  width: 100%;
+  padding: 14px;
+  font-size: 15.5px;
+}

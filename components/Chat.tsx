@@ -41,6 +41,8 @@ export default function Chat() {
   const [copied, setCopied] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [sourceTag, setSourceTag] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,6 +81,33 @@ export default function Chat() {
       setSessionId(s.id);
       setMessages([]);
       setHistoryOpen(false);
+    }
+  }
+
+  async function renameSession(id: string) {
+    const title = editTitle.trim();
+    setEditingId(null);
+    if (!title) return;
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, title } : s)));
+    await fetch("/api/sessions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, title }),
+    });
+  }
+
+  async function deleteSession(id: string) {
+    if (!window.confirm("Delete this conversation? Workout logs are unaffected.")) return;
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    await fetch("/api/sessions", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (sessionId === id) {
+      const rest = sessions.filter((s) => s.id !== id);
+      if (rest.length > 0) openSession(rest[0].id);
+      else newChat();
     }
   }
 
@@ -210,14 +239,54 @@ export default function Chat() {
       </button>
       <div className="sessions-list">
         {sessions.map((s) => (
-          <button
+          <div
             key={s.id}
             className={`session-item ${s.id === sessionId ? "active" : ""}`}
-            onClick={() => openSession(s.id)}
+            onClick={() => editingId !== s.id && openSession(s.id)}
           >
-            <span className="session-title">{sessionLabel(s)}</span>
-            <span className="session-date">{sessionDate(s)}</span>
-          </button>
+            {editingId === s.id ? (
+              <input
+                className="session-edit"
+                autoFocus
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") renameSession(s.id);
+                  if (e.key === "Escape") setEditingId(null);
+                }}
+                onBlur={() => renameSession(s.id)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <>
+                <span className="session-title">{sessionLabel(s)}</span>
+                <span className="session-actions">
+                  <button
+                    className="icon-btn"
+                    title="Rename"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(s.id);
+                      setEditTitle(sessionLabel(s));
+                    }}
+                  >
+                    ✎
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title="Delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteSession(s.id);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </span>
+                <span className="session-date">{sessionDate(s)}</span>
+              </>
+            )}
+          </div>
         ))}
       </div>
     </aside>
@@ -285,7 +354,7 @@ export default function Chat() {
                                 title={SOURCES[tag]?.name ?? tag}
                                 onClick={() => setSourceTag(tag)}
                               >
-                                ⓘ
+                                {SOURCES[tag]?.label ?? "ⓘ"}
                               </button>
                             );
                           }
