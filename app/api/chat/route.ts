@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { buildSystemPrompt } from "@/lib/prompt";
+import { buildSystemBlocks } from "@/lib/prompt";
 
 export const maxDuration = 300;
 
@@ -271,7 +271,18 @@ export async function POST(req: Request) {
     .eq("id", session_id)
     .is("title", null);
 
-  const system = await buildSystemPrompt();
+  const blocks = await buildSystemBlocks();
+  // Static rules + evidence library are cached at the API (90% input
+  // discount on cache hits); only the small dynamic block bills fresh.
+  const system = [
+    {
+      type: "text",
+      text: blocks.staticPart,
+      cache_control: { type: "ephemeral" },
+    },
+    { type: "text", text: blocks.dynamicPart },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ] as any;
 
   // Stream NDJSON: {t:"d",v:delta} text chunks, {t:"tool",v:label} tool events,
   // {t:"end"} when complete. The full reply is persisted server-side at the end.
