@@ -12,14 +12,30 @@ type Draft = {
   t?: number;
 };
 
+// Common shorthand <-> full-name equivalences so "RDL" matches "Romanian deadlift"
+const ALIASES: [RegExp, string][] = [
+  [/\bromanian deadlifts?\b/, "rdl"],
+  [/\bsingle leg rdl\b|\bsl rdl\b|\bsingle leg romanian deadlifts?\b/, "slrdl"],
+  [/\bdumbbell\b|\bdbs\b/, "db"],
+  [/\bbulgarian split squats?\b|\bbulgarians\b/, "bulgarian"],
+  [/\bbarbell\b/, "bb"],
+  [/\bkettlebell\b|\bkbs\b/, "kb"],
+  [/\boverhead press\b|\bmilitary press\b/, "ohp"],
+  [/\blat pulldowns?\b|\bpulldowns?\b/, "pulldown"],
+  [/\bpull ups\b|\bpullups\b/, "pull up"],
+  [/\bchin ups\b|\bchinups\b/, "chin up"],
+];
+
 // "Bench press (close grip)" -> "bench press" for cross-session matching
 function normalize(name: string): string {
-  return name
+  let s = name
     .toLowerCase()
     .replace(/\(.*?\)/g, "")
-    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  for (const [re, canon] of ALIASES) s = s.replace(re, canon);
+  return s.replace(/\s+/g, " ").trim();
 }
 
 function fmtDate(d: string): string {
