@@ -427,7 +427,12 @@ export default function Chat() {
             placeholder="e.g. Ran 5k this morning, felt easy. What should I do tomorrow?"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Touch devices: Enter = line break (send button sends).
+              // Desktop: Enter sends, Shift+Enter = line break.
+              const touch =
+                typeof window !== "undefined" &&
+                window.matchMedia("(pointer: coarse)").matches;
+              if (e.key === "Enter" && !e.shiftKey && !touch) {
                 e.preventDefault();
                 send();
               }
