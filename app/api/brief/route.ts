@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { ouraSnapshot } from "@/lib/oura";
 import { buildSystemPrompt } from "@/lib/prompt";
 
 export const maxDuration = 300;
@@ -35,42 +36,17 @@ function fmtShort(offsetDays = 0): string {
   });
 }
 
-async function ouraToday(): Promise<string | null> {
-  const token = process.env.OURA_TOKEN;
-  if (!token) return null;
-  const today = etDate();
-  const headers = { Authorization: `Bearer ${token}` };
-  try {
-    const [r, s] = await Promise.all([
-      fetch(
-        `https://api.ouraring.com/v2/usercollection/daily_readiness?start_date=${today}&end_date=${today}`,
-        { headers, cache: "no-store" }
-      ).then((x) => (x.ok ? x.json() : null)),
-      fetch(
-        `https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${today}&end_date=${today}`,
-        { headers, cache: "no-store" }
-      ).then((x) => (x.ok ? x.json() : null)),
-    ]);
-    const rd = r?.data?.[0];
-    const sl = s?.data?.[0];
-    if (!rd && !sl) return null;
-    const parts: string[] = [];
-    if (rd?.score) parts.push(`readiness ${rd.score}`);
-    if (rd?.contributors?.hrv_balance)
-      parts.push(`HRV balance ${rd.contributors.hrv_balance}`);
-    if (sl?.score) parts.push(`sleep ${sl.score}`);
-    return parts.join(", ");
-  } catch {
-    return null;
-  }
-}
-
 type WRow = {
   date: string;
   type: string;
   duration_min: number | null;
   distance_km: number | null;
 };
+
+async function ouraToday(): Promise<string | null> {
+  const snap = await ouraSnapshot();
+  return snap.status === "ok" ? snap.summary : null;
+}
 
 function bucketSummary(rows: WRow[]): string {
   if (rows.length === 0) return "no logged sessions";

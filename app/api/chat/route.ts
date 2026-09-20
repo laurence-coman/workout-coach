@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { ouraSnapshot, describeSnapshot } from "@/lib/oura";
 import { buildSystemBlocks } from "@/lib/prompt";
 
 export const maxDuration = 300;
@@ -130,6 +131,12 @@ const tools: Anthropic.Tool[] = [
       },
       required: ["action"],
     },
+  },
+  {
+    name: "get_readiness",
+    description:
+      "Fetch today's LIVE Oura readiness and sleep scores. Use whenever the athlete asks about recovery, sleep, readiness, or 'how am I looking today', and before adjusting today's plan for recovery reasons. Never quote Oura numbers from memory - always call this.",
+    input_schema: { type: "object", properties: {} },
   },
   {
     name: "manage_guardrail",
@@ -262,6 +269,10 @@ async function runTool(name: string, input: Record<string, unknown>) {
     return error ? `Error: ${error.message}` : "Guardrail deactivated.";
   }
 
+  if (name === "get_readiness") {
+    return describeSnapshot(await ouraSnapshot());
+  }
+
   return "Unknown tool.";
 }
 
@@ -273,6 +284,7 @@ const TOOL_LABELS: Record<string, string> = {
   save_coach_note: "Updated memory",
   manage_goal: "Updated goals",
   manage_guardrail: "Updated guardrails",
+  get_readiness: "Checked Oura",
 };
 
 export async function POST(req: Request) {
@@ -358,10 +370,18 @@ export async function POST(req: Request) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...({ thinking: { type: "adaptive" }, output_config: { effort: deep ? "high" : "medium" } } as any),
             system,
-            tools,
+            // Server-side web search runs inside the API call itself
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            tools: [...tools, { type: "web_search_20250305", name: "web_search", max_uses: 3 } as any],
             messages,
           });
           runner.on("text", (delta) => push({ t: "d", v: delta }));
+          runner.on("streamEvent", (e) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const ev = e as any;
+            if (ev.type === "content_block_start" && ev.content_block?.type === "server_tool_use")
+              push({ t: "tool", v: "Searching the web" });
+          });
           const response = await runner.finalMessage();
 
           const textParts = response.content
