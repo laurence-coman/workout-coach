@@ -35,7 +35,7 @@ export async function GET() {
   for (const row of rows ?? []) {
     try {
       const res = await anthropic.messages.create({
-        model: "claude-opus-4-8",
+        model: "claude-sonnet-5-5",
         max_tokens: 2000,
         system: SYSTEM,
         messages: [

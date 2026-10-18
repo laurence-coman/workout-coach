@@ -214,18 +214,28 @@ export default function Chat() {
         { role: "tool", content: "✓ Connection dropped - recovering your coach's reply…" },
       ]);
       const sid = sessionId;
+      // Server generation now outlives the connection (waitUntil), so poll
+      // for up to ~3 minutes and retry immediately when the app foregrounds.
+      let recovered = false;
       const recover = (attempt: number) => {
+        if (recovered) return;
         fetch(`/api/messages?session_id=${sid}`)
           .then((r) => r.json())
           .then((m) => {
             if (Array.isArray(m) && m.length && m[m.length - 1].role === "assistant") {
+              recovered = true;
+              document.removeEventListener("visibilitychange", onBack);
               setMessages(m);
-            } else if (attempt < 6) {
-              setTimeout(() => recover(attempt + 1), 4000);
+            } else if (attempt < 36) {
+              setTimeout(() => recover(attempt + 1), 5000);
             }
           })
-          .catch(() => attempt < 6 && setTimeout(() => recover(attempt + 1), 4000));
+          .catch(() => attempt < 36 && setTimeout(() => recover(attempt + 1), 5000));
       };
+      const onBack = () => {
+        if (document.visibilityState === "visible") recover(1);
+      };
+      document.addEventListener("visibilitychange", onBack);
       setTimeout(() => recover(1), 3000);
     } finally {
       setLoading(false);

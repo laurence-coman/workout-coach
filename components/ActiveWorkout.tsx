@@ -220,17 +220,22 @@ export default function ActiveWorkout() {
             )}
           </div>
           <div className="wt-log-row">
-            <input
+            <textarea
               className="wt-input"
+              rows={1}
               placeholder="e.g. 8, 8, 7 @ 123 · felt strong"
               value={entries[it.name] ?? ""}
               onChange={(e) => {
                 const next = { ...entries, [it.name]: e.target.value };
                 setEntries(next);
                 update({ entries: next });
+                // grow with the content instead of scrolling sideways
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
                   const next = { ...done, [it.name]: true };
                   setDone(next);
                   update({ done: next });

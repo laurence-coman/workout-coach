@@ -90,7 +90,7 @@ function anthro() {
 
 async function generate(system: string, user: string, effort: string) {
   const response = await anthro().messages.create({
-    model: "claude-opus-4-8",
+    model: "claude-opus-5-5",
     max_tokens: 16000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...({ thinking: { type: "adaptive" }, output_config: { effort } } as any),
@@ -165,7 +165,7 @@ Structure:
 Include:
 1. One-line read on recovery trend and training load.
 2. Which rotation session is up tomorrow - based only on what the log confirms. If today's planned session has no log entry yet, say so and make the plan conditional on it.
-3. The full session prescription, targets anchored to logged numbers (completeness rules apply).
+3. The full session prescription, targets anchored to logged numbers (completeness rules apply). Assume the 50-75 min guardrail and say which total you planned to; invite a one-line reply with my actual time budget if tomorrow is tighter, and resize from that.
 4. A contingency option.
 Keep it tight - I'm reading this the night before.`;
 

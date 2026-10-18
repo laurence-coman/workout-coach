@@ -10,6 +10,8 @@
   --ink: #1d232b;
   --nav-bg: rgba(255, 255, 255, 0.82);
   --hover: rgba(23, 27, 33, 0.05);
+  --bubble-user-bg: #1d232b;
+  --bubble-user-text: #ffffff;
   --shadow: 0 1px 2px rgba(23, 27, 33, 0.05), 0 4px 16px rgba(23, 27, 33, 0.04);
 }
 
@@ -26,6 +28,8 @@ html[data-theme="dark"] {
   --ink: #e8ddcf;
   --nav-bg: rgba(25, 21, 18, 0.85);
   --hover: rgba(232, 221, 207, 0.07);
+  --bubble-user-bg: #31452f;
+  --bubble-user-text: #e8ddcf;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
@@ -284,8 +288,8 @@ h1 {
 
 .msg-user {
   align-self: flex-end;
-  background: var(--ink);
-  color: #fff;
+  background: var(--bubble-user-bg);
+  color: var(--bubble-user-text);
   border-bottom-right-radius: 6px;
 }
 
@@ -1355,4 +1359,14 @@ tbody tr:hover {
   color: var(--accent-dim);
   font-size: 12px;
   font-weight: 500;
+}
+
+
+/* Workout tab entries: wrap + grow instead of sideways scroll */
+textarea.wt-input {
+  resize: none;
+  overflow-y: auto;
+  max-height: 140px;
+  line-height: 1.45;
+  font-family: inherit;
 }

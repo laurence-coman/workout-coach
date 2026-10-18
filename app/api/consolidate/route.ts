@@ -43,7 +43,7 @@ export async function GET(req: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await anthropic.messages.create({
     // Memory rewrites are high-stakes: use the heavyweight model.
-    model: "claude-opus-4-8",
+    model: "claude-opus-5-5",
     max_tokens: 12000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...({ thinking: { type: "adaptive" }, output_config: { effort: "high" } } as any),
