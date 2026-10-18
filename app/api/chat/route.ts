@@ -370,14 +370,13 @@ export async function POST(req: Request) {
           const runner = anthropic.messages.stream({
             // Opus with bounded thinking on every reply; "deep:" raises the
             // reasoning budget further for big planning questions.
-            // Oct 2026 routing: Sonnet 5.5 for everyday coaching (fast),
-            // Opus 5.5 for deep: planning turns. Short mid-workout messages
-            // get low effort so logging replies come back fast.
-            model: deep ? "claude-opus-5-5" : "claude-sonnet-5-5",
+            // Everyday chat: Opus 5.5 at medium effort (per Laurence, Oct 18).
+            // deep: turns raise effort to high.
+            model: "claude-opus-5-5",
             max_tokens: deep ? 20000 : 12000,
             // SDK types lag the API: spread the new thinking controls past TS.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...({ thinking: { type: "adaptive" }, output_config: { effort: deep ? "high" : userMessage.length < 200 ? "low" : "medium" } } as any),
+            ...({ thinking: { type: "adaptive" }, output_config: { effort: deep ? "high" : "medium" } } as any),
             system,
             // Server-side web search runs inside the API call itself
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
